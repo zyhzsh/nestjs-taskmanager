@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { TaskStatus } from './tasks-status.emum';
 import { CreateTaskDto } from './dto/create-task.dto';
-import { UpdateTask } from './dto/update-task.dto';
+
 import { GetTasksFilterDTO } from './dto/get-tasks-filter.dto';
 import { TasksRepository } from './task.repository';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -34,24 +34,16 @@ export class TasksService {
     if (result.affected === 0)
       throw new NotFoundException(`Task with ID: ${id} not found`);
   }
-  async updateTask(
-    id: string,
-    updateTask: UpdateTask,
-    user: User,
-  ): Promise<Task> {
-    let task = await this.getTaskById(id, user);
-    task = { id: id, user: user, ...updateTask };
-    await this.tasksRepository.save(task);
-    return task;
-  }
+
   async updateTaskStatus(
     id: string,
     status: TaskStatus,
     user: User,
-  ): Promise<Task> {
-    const task = await this.getTaskById(id, user);
-    task.status = status;
-    await this.tasksRepository.save(task);
-    return task;
+  ): Promise<void> {
+    await this.getTaskById(id, user);
+    const result = await this.tasksRepository.update(id, { status });
+    if (result.affected === 0) {
+      throw new NotFoundException(`Task with ID: ${id} not found`);
+    }
   }
 }
